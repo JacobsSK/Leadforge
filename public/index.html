@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadForge — Agency in a Box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B0E13; --panel:#121826; --panel-2:#0E1420; --panel-3:#161D2E;
+  --line:#212B3D; --line-soft:#1A2334;
+  --text:#E9EEF6; --muted:#8B97AB; --faint:#5C6579;
+  --gold:#F2B450; --ember:#E86A32; --ember-deep:#C74E24;
+  --steel:#5E9BD6; --green:#3FBF8F; --red:#E4574F;
+  --forge:linear-gradient(120deg,#F2B450 0%,#E86A32 55%,#C74E24 100%);
+  --radius:12px; --radius-sm:8px;
+  --font-display:'Archivo',sans-serif; --font-body:'Inter',sans-serif; --font-mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14.5px;line-height:1.55;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(900px 420px at 85% -10%,rgba(232,106,50,.09),transparent 60%),
+             radial-gradient(700px 380px at -10% 110%,rgba(94,155,214,.06),transparent 60%)}
+#app{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:0 20px 90px}
+
+/* header */
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:22px 0 14px;border-bottom:1px solid var(--line-soft)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:38px;height:38px;border-radius:10px;background:var(--forge);display:grid;place-items:center;
+  font-family:var(--font-display);font-weight:900;font-size:19px;color:#14100C;box-shadow:0 0 22px rgba(232,106,50,.35)}
+.brand h1{font-family:var(--font-display);font-weight:800;font-size:21px;letter-spacing:.2px}
+.brand h1 span{background:var(--forge);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{display:block;color:var(--muted);font-size:11.5px;font-weight:500;letter-spacing:.4px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mode-badge{font-family:var(--font-mono);font-size:11px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);display:flex;align-items:center;gap:6px}
+.mode-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.mode-badge.proxy .dot{background:var(--green);box-shadow:0 0 8px rgba(63,191,143,.7)}
+.mode-badge.direct .dot{background:var(--gold)}
+.fx-wrap{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:11.5px;color:var(--muted);
+  border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+.fx-wrap input{width:58px;background:transparent;border:none;color:var(--text);font-family:var(--font-mono);font-size:12px;text-align:right;outline:none}
+
+/* forge line (pipeline) */
+.forge-line{margin:22px 0 6px;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:var(--radius);padding:16px 18px}
+.forge-line-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.forge-line-head h2{font-family:var(--font-display);font-size:13px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted)}
+.forge-line-head .rev{font-family:var(--font-mono);font-size:12px;color:var(--gold)}
+.stages{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;position:relative}
+.stages::before{content:'';position:absolute;top:14px;left:6%;right:6%;height:2px;background:var(--line);z-index:0}
+.stage{position:relative;z-index:1}
+.stage .node{width:28px;height:28px;margin:0 auto;border-radius:50%;border:2px solid var(--line);background:var(--panel);
+  display:grid;place-items:center;font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--muted);transition:all .25s}
+.stage.lit .node{border-color:transparent;background:var(--forge);color:#14100C;box-shadow:0 0 16px rgba(232,106,50,.5)}
+.stage .stage-name{text-align:center;font-size:11px;font-weight:600;letter-spacing:.4px;color:var(--muted);margin-top:7px;text-transform:uppercase}
+.stage.lit .stage-name{color:var(--text)}
+.stage-leads{margin-top:8px;display:flex;flex-direction:column;gap:5px;min-height:4px}
+.lead-chip{background:var(--panel-3);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:11.5px;font-weight:500;
+  cursor:pointer;transition:border-color .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead-chip:hover{border-color:var(--ember)}
+.lead-chip.active{border-color:var(--ember);box-shadow:0 0 0 1px var(--ember)}
+.lead-chip .chip-pain{color:var(--muted);font-size:10px;display:block;font-family:var(--font-mono)}
+
+/* nav */
+nav{display:flex;gap:6px;margin:18px 0 22px;overflow-x:auto;padding-bottom:2px}
+nav button{flex-shrink:0;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:999px;
+  padding:8px 16px;font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;gap:7px;align-items:center}
+nav button .n{font-family:var(--font-mono);font-size:11px;opacity:.7}
+nav button:hover{border-color:var(--ember);color:var(--text)}
+nav button.active{background:var(--forge);border-color:transparent;color:#14100C}
+
+/* panels */
+section.tab{display:none}
+section.tab.visible{display:block;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);padding:22px;margin-bottom:18px}
+.panel h3{font-family:var(--font-display);font-size:17px;font-weight:800;margin-bottom:4px}
+.panel .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+label.field{display:block;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.3px;margin-bottom:12px}
+label.field span{display:block;margin-bottom:5px;text-transform:uppercase;font-size:10.5px;letter-spacing:.8px}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+  border-radius:var(--radius-sm);padding:10px 12px;font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--ember)}
+textarea{resize:vertical;min-height:70px}
+.btn{background:var(--forge);color:#14100C;border:none;border-radius:var(--radius-sm);padding:11px 20px;
+  font-family:var(--font-body);font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .1s,box-shadow .15s;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{box-shadow:0 4px 18px rgba(232,106,50,.35)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn.ghost:hover{border-color:var(--ember);box-shadow:none}
+.btn.small{padding:7px 13px;font-size:12px}
+.btn.danger{background:transparent;border:1px solid var(--red);color:var(--red)}
+.copy-btn{background:var(--panel-3);border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:4px 10px;
+  font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-mono);transition:all .15s}
+.copy-btn:hover{color:var(--text);border-color:var(--ember)}
+.copy-btn.copied{color:var(--green);border-color:var(--green)}
+
+/* states */
+.banner{border-radius:var(--radius-sm);padding:12px 15px;font-size:13px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;line-height:1.5}
+.banner.info{background:rgba(94,155,214,.08);border:1px solid rgba(94,155,214,.35);color:#BCD6EE}
+.banner.warn{background:rgba(242,180,80,.07);border:1px solid rgba(242,180,80,.35);color:#F4D9A6}
+.banner.error{background:rgba(228,87,79,.08);border:1px solid rgba(228,87,79,.4);color:#F3B7B3}
+.banner .banner-retry{margin-left:auto;flex-shrink:0}
+.empty{border:1px dashed var(--line);border-radius:var(--radius);padding:34px 20px;text-align:center;color:var(--muted)}
+.empty .empty-icon{font-size:26px;margin-bottom:8px;opacity:.8}
+.empty p{font-size:13px;max-width:440px;margin:0 auto 14px}
+.loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:36px 0;color:var(--muted);font-size:13px}
+.spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--ember);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading .loading-step{font-family:var(--font-mono);font-size:11.5px;color:var(--gold)}
+
+/* lead cards */
+.lead-card{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:8px}
+.lead-card h4{font-family:var(--font-display);font-size:15px;font-weight:700}
+.pill{display:inline-block;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.pill.no-site{border-color:var(--red);color:var(--red)}
+.pill.outdated-site{border-color:var(--gold);color:var(--gold)}
+.pill.no-booking{border-color:var(--steel);color:var(--steel)}
+.pill.high{border-color:var(--ember);color:var(--ember)}
+.lead-card .reason{font-size:12.5px;color:var(--muted)}
+.lead-card .hook{font-size:12.5px;color:var(--text);background:var(--panel-3);border-left:2px solid var(--ember);padding:7px 10px;border-radius:0 6px 6px 0}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+
+/* message blocks */
+.msg-block{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden}
+.msg-block .msg-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line-soft);background:var(--panel-3)}
+.msg-block .msg-head .msg-title{font-family:var(--font-display);font-weight:700;font-size:13px}
+.msg-block .msg-head .msg-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--muted)}
+.msg-block .msg-head .copy-btn{margin-left:auto}
+.msg-block .msg-body{padding:14px;font-size:13.5px;white-space:pre-wrap;line-height:1.65;color:#D6DEEA}
+.msg-block .msg-body .subj{font-weight:700;color:var(--gold);display:block;margin-bottom:8px}
+
+/* strategy panel */
+.strategy{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.strategy .col h5{font-family:var(--font-display);font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.check-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.check-list li{display:flex;gap:9px;font-size:13px;color:#C9D2E0;align-items:flex-start}
+.check-list li::before{content:'';flex-shrink:0;width:15px;height:15px;margin-top:2px;border-radius:4px;border:1.5px solid var(--ember);
+  background:linear-gradient(120deg,rgba(242,180,80,.15),rgba(232,106,50,.15))}
+.cadence .c-row{display:grid;grid-template-columns:64px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:13px}
+.cadence .c-row:last-child{border-bottom:none}
+.cadence .c-day{font-family:var(--font-mono);font-size:11px;color:var(--ember);font-weight:600;padding-top:2px}
+.cadence .c-what b{color:var(--text)}
+.cadence .c-what{color:var(--muted)}
+
+/* pricing */
+.pkg-card{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;gap:12px;position:relative}
+.pkg-card.featured{border-color:var(--ember);box-shadow:0 0 26px rgba(232,106,50,.12)}
+.pkg-card .pkg-tier{font-family:var(--font-mono);font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold)}
+.pkg-card h4{font-family:var(--font-display);font-size:18px;font-weight:800}
+.pkg-card .pkg-price{font-family:var(--font-mono);font-size:22px;font-weight:600}
+.pkg-card .pkg-price small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.pkg-card ul{list-style:none;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:#C9D2E0;flex:1}
+.pkg-card ul li::before{content:'— ';color:var(--ember)}
+.pkg-card .pkg-turn{font-size:11.5px;color:var(--muted);font-family:var(--font-mono)}
+.est-result{background:var(--panel-3);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:14px}
+.est-result .est-price{font-family:var(--font-mono);font-size:28px;font-weight:600;background:var(--forge);-webkit-background-clip:text;background-clip:text;color:transparent}
+.est-line{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);padding:4px 0;border-bottom:1px dashed var(--line-soft)}
+.est-line b{color:var(--text);font-family:var(--font-mono)}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-bottom:12px}
+.feature-toggle{display:flex;gap:8px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:9px 11px;font-size:12.5px;cursor:pointer;user-select:none;transition:border-color .15s}
+.feature-toggle:hover{border-color:var(--ember)}
+.feature-toggle input{accent-color:var(--ember)}
+.feature-toggle .f-price{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--muted)}
+
+/* documents */
+.doc{background:#F7F4EE;color:#23252B;border-radius:var(--radius);padding:36px 40px;font-size:13.5px;line-height:1.7;font-family:Georgia,'Times New Roman',serif}
+.doc h1{font-family:var(--font-display);font-size:22px;margin-bottom:4px;color:#161820}
+.doc h2{font-family:var(--font-display);font-size:15px;margin:20px 0 8px;color:#161820;border-bottom:2px solid #E86A32;padding-bottom:4px;display:inline-block}
+.doc h3{font-size:13.5px;margin:14px 0 6px;color:#161820}
+.doc p{margin-bottom:9px}
+.doc ul,.doc ol{margin:0 0 10px 20px}
+.doc li{margin-bottom:4px}
+.doc hr{border:none;border-top:1px solid #D8D2C6;margin:16px 0}
+.doc strong{color:#161820}
+.doc-toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+
+/* delivery */
+.page-plan{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.page-plan .pp-head{padding:11px 15px;background:var(--panel-3);border-bottom:1px solid var(--line-soft);display:flex;align-items:center;gap:10px;cursor:pointer}
+.page-plan .pp-head h5{font-family:var(--font-display);font-size:13.5px;font-weight:700}
+.page-plan .pp-head .copy-btn{margin-left:auto}
+.page-plan .pp-body{padding:14px 15px;display:none}
+.page-plan.open .pp-body{display:block}
+.pp-section{margin-bottom:12px}
+.pp-section .pp-name{font-family:var(--font-mono);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.pp-section .pp-copy{font-size:13px;color:#D6DEEA;white-space:pre-wrap;line-height:1.6}
+
+/* detail bar / misc */
+.lead-detail-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--panel-3);border:1px solid var(--line);
+  border-radius:var(--radius);padding:12px 16px;margin-bottom:16px}
+.lead-detail-bar .ld-name{font-family:var(--font-display);font-weight:800;font-size:15px}
+.lead-detail-bar .ld-meta{font-size:12px;color:var(--muted);font-family:var(--font-mono)}
+.lead-detail-bar .spacer{margin-left:auto}
+.stage-select{width:auto;font-size:12px;padding:7px 10px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--panel-3);border:1px solid var(--line);
+  color:var(--text);padding:11px 20px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:99;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{border-color:var(--green)}
+.toast.err{border-color:var(--red)}
+.hint{font-size:11.5px;color:var(--muted);font-family:var(--font-mono)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mt{margin-top:14px}.mb{margin-bottom:14px}
+
+@media(max-width:900px){
+  .grid-2,.strategy{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr}
+  .stages{display:flex;overflow-x:auto}
+  .stage{min-width:130px;flex:1}
+  .doc{padding:22px 18px}
+}
+@media print{
+  body{background:#fff}
+  body::before,header,nav,.forge-line,.doc-toolbar,.lead-detail-bar,.toast,.no-print{display:none!important}
+  #app{max-width:100%;padding:0}
+  section.tab{display:none!important}
+  section.tab.visible{display:block!important}
+  .panel{border:none;padding:0;background:#fff;margin:0}
+  .panel:not(.print-target){display:none!important}
+  .doc{border-radius:0;padding:0;background:#fff}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">LF</div>
+    <div>
+      <h1>Lead<span>Forge</span></h1>
+      <small>AGENCY IN A BOX · FIND → PITCH → CLOSE → DELIVER</small>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="fx-wrap">USD→ZAR <input id="fxRate" type="number" step="0.1" value="18.5" aria-label="USD to ZAR exchange rate"></div>
+    <div id="modeBadge" class="mode-badge"><span class="dot"></span><span id="modeText">connecting…</span></div>
+  </div>
+</header>
+
+<!-- ══════════ FORGE LINE — pipeline board ══════════ -->
+<div class="forge-line">
+  <div class="forge-line-head">
+    <h2>Pipeline</h2>
+    <div class="rev" id="pipelineRev">$0 <span style="color:var(--muted)">closed</span></div>
+  </div>
+  <div class="stages" id="stagesBoard"></div>
+</div>
+
+<nav id="mainNav">
+  <button data-tab="discover" class="active"><span class="n">1</span> Discover</button>
+  <button data-tab="outreach"><span class="n">2</span> Outreach</button>
+  <button data-tab="pricing"><span class="n">3</span> Packages &amp; Pricing</button>
+  <button data-tab="contract"><span class="n">4</span> Contract &amp; Close</button>
+  <button data-tab="delivery"><span class="n">5</span> Site Delivery</button>
+</nav>
+
+<!-- ══════════ SECTION 1 — DISCOVER ══════════ -->
+<section class="tab visible" id="tab-discover">
+  <div id="discoverModeBanner"></div>
+  <div class="panel">
+    <h3>Lead Discovery</h3>
+    <p class="sub">Enter an industry and location. In practice mode, LeadForge generates realistic lead <em>profiles</em> — archetypes of local businesses most likely to lack a strong web presence — so you can run the full pitch workflow end to end. With Google Places wired up, this same search returns real businesses with no website.</p>
+    <div class="grid-2">
+      <label class="field"><span>Industry / niche</span><input type="text" id="discIndustry" placeholder="e.g. plumbers, dentists, guest houses"></label>
+      <label class="field"><span>Location</span><input type="text" id="discLocation" placeholder="e.g. Johannesburg, Sandton, Roodepoort"></label>
+    </div>
+    <div class="row">
+      <button class="btn" id="btnDiscover">Scout leads</button>
+      <span class="hint">7 profiles · no-website likelihood + pitch hook per lead</span>
+    </div>
+  </div>
+  <div id="discoverResults"></div>
+
+  <div class="panel">
+    <h3>Add a real lead manually</h3>
+    <p class="sub">Found a real business yourself (Maps, drive-by, referral)? Add it here — the whole pipeline works identically for real and practice leads.</p>
+    <div class="grid-3">
+      <label class="field"><span>Business name</span><input type="text" id="manName" placeholder="Mo's Plumbing Works"></label>
+      <label class="field"><span>Industry</span><input type="text" id="manIndustry" placeholder="Plumbing"></label>
+      <label class="field"><span>Location</span><input type="text" id="manLocation" placeholder="Randburg"></label>
+    </div>
+    <div class="grid-2">
+      <label class="field"><span>Main pain point</span>
+        <select id="manPain">
+          <option value="no-site">No website at all</option>
+          <option value="outdated-site">Outdated / broken website</option>
+          <option value="no-booking">No online booking / enquiries</option>
+        </select>
+      </label>
+      <label class="field"><span>Notes (contact person, phone, anything you know)</span><input type="text" id="manNotes" placeholder="Owner: Sipho · 011 ... · busy WhatsApp line"></label>
+    </div>
+    <button class="btn ghost" id="btnAddManual">Add to pipeline</button>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 2 — OUTREACH ══════════ -->
+<section class="tab" id="tab-outreach">
+  <div id="outreachLeadBar"></div>
+  <div id="outreachContent"></div>
+
+  <div class="panel">
+    <h3>LinkedIn Strategy</h3>
+    <p class="sub">The system around the messages. Run this daily — volume × consistency is what fills the pipeline.</p>
+    <div class="strategy">
+      <div class="col">
+        <h5>Profile optimization checklist</h5>
+        <ul class="check-list">
+          <li>Headline sells the outcome, not the job title: “I build websites that get local businesses found on Google — live in 7 days.”</li>
+          <li>Banner image: before/after of a client site, or a simple “Your business, online in 7 days” graphic.</li>
+          <li>About section opens with the client's problem (invisible on Google) not your skills.</li>
+          <li>Featured section: 2–3 site screenshots + one short case-study post, even if it's your own demo builds.</li>
+          <li>Custom URL, professional photo, open profile ON so non-connections can message back.</li>
+          <li>Post 2–3× per week: quick wins, before/afters, “5 things your site is missing” — stay visible between touches.</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h5>Connection cadence (per weekday)</h5>
+        <div class="cadence">
+          <div class="c-row"><div class="c-day">DAILY</div><div class="c-what"><b>15–20 connection requests</b> — under LinkedIn's radar; space them morning/afternoon rather than one burst.</div></div>
+          <div class="c-row"><div class="c-day">DAY 1</div><div class="c-what"><b>Connect</b> with the short note (no pitch — curiosity only).</div></div>
+          <div class="c-row"><div class="c-day">DAY 3</div><div class="c-what"><b>Value message</b> — one specific, free observation about their online presence. No ask.</div></div>
+          <div class="c-row"><div class="c-day">DAY 7</div><div class="c-what"><b>Offer</b> — the direct pitch with a low-friction CTA (10-min call or free homepage mockup).</div></div>
+          <div class="c-row"><div class="c-day">DAY 14</div><div class="c-what"><b>Break-up email</b> — polite last touch; highest reply rate of the sequence.</div></div>
+          <div class="c-row"><div class="c-day">SA TIP</div><div class="c-what"><b>WhatsApp beats email locally</b> — if you have a number, send the WhatsApp opener after the Day 3 touch.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 3 — PACKAGES & PRICING ══════════ -->
+<section class="tab" id="tab-pricing">
+  <div id="pricingLeadBar"></div>
+  <div class="panel">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <h3>Packages</h3>
+        <p class="sub" style="margin-bottom:0">Three tiers. Select one for the active lead — it flows into the proposal, contract, and delivery spec.</p>
+      </div>
+      <button class="btn ghost small" id="btnTailorPkgs">Tailor to lead's industry ✦</button>
+    </div>
+    <div class="grid-3 mt" id="pkgGrid"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Price Estimator</h3>
+    <p class="sub">Describe the scope — get a fair build price and timeline. Baselines are tuned for a solo SA builder selling at Tier-1-friendly rates.</p>
+    <div class="grid-2">
+      <label class="field"><span>Number of pages</span><input type="number" id="estPages" min="1" max="40" value="5"></label>
+      <label class="field"><span>Copywriting</span>
+        <select id="estCopy">
+          <option value="client">Client supplies all copy</option>
+          <option value="ai" selected>I write it (AI-assisted) — per page fee</option>
+        </select>
+      </label>
+    </div>
+    <div class="feature-grid" id="estFeatures"></div>
+    <label class="field"><span>Anything unusual? (optional — affects complexity)</span><textarea id="estNotes" placeholder="e.g. bilingual site, gallery of 200 photos, custom quote calculator…"></textarea></label>
+    <div class="row">
+      <button class="btn" id="btnEstimate">Estimate price &amp; timeline</button>
+      <button class="btn ghost small" id="btnEstAI">AI sense-check the estimate ✦</button>
+    </div>
+    <div id="estOutput"></div>
+  </div>
+</section>
+
+<!-- ══════════ SECTION 4 — CONTRACT & CLOSE ══════════ -->
+<section class="tab" id="tab-contract">
+  <div id="contractLeadBar"></div>
+  <div class="panel no-print">
+    <h3>Contract &amp; Proposal Generator</h3>
+    <p class="sub">Generates a plain-language service agreement (scope, price, 50% deposit + balance, revision limits, timeline) and a one-page proposal built from the selected package. Print → Save as PDF to send.</p>
+    <div class="grid-2">
+      <label class="field"><span>Your name / agency name</span><input type="text" id="agencyName" placeholder="Somila · Forge Digital"></label>
+      <label class="field"><span>Deposit percentage</span>
+        <select id="depositPct"><option value="50" selected>50% deposit / 50% on delivery</option><option value="40">40% / 60%</option><option value="30">30% / 70%</option></select>
+      </label>
+    </div>
+    <div class="row">
+      <button class="btn" id="btnContract">Generate contract + proposal</button>
+      <span class="hint" id="contractHint"></span>
+    </div>
+  </div>
+  <div id="contractOutput"></div>
+</section>
+
+<!-- ══════════ SECTION 5 — SITE DELIVERY ══════════ -->
+<section class="tab" id="tab-delivery">
+  <div id="deliveryLeadBar"></div>
+  <div class="panel no-print">
+    <h3>Site Delivery Spec</h3>
+    <p class="sub">Turns the closed deal into the build: page-by-page site copy (hero, about, services, contact, CTAs) plus a structured brief Claude Code / Claude Design / a template builder can execute directly — scoped to exactly what was sold in Section 3, nothing more, nothing less.</p>
+    <div class="row">
+      <button class="btn" id="btnDelivery">Generate delivery spec</button>
+      <span class="hint" id="deliveryHint"></span>
+    </div>
+  </div>
+  <div id="deliveryOutput"></div>
+</section>
+
+</div>
+<div class="toast" id="toast"></div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   LEADFORGE — application logic
+   Architecture: proxy-first (/api/generate on Railway) with direct
+   Anthropic endpoint fallback for Claude.ai artifact preview.
+   ═══════════════════════════════════════════════════════════════════════ */
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const MODEL = 'claude-sonnet-4-6';
+const STAGES = [
+  { key: 'new',       label: 'New Lead' },
+  { key: 'contacted', label: 'Contacted' },
+  { key: 'proposal',  label: 'Proposal Sent' },
+  { key: 'closed',    label: 'Closed' },
+  { key: 'delivered', label: 'Delivered' },
+];
+
+/* ─────────────── state + persistence ─────────────── */
+const state = {
+  apiMode: null,            // 'proxy' | 'direct'
+  leadsSearchMode: 'stub',  // 'stub' | 'live'  (from /api/health)
+  leads: [],
+  activeLeadId: null,
+  fxRate: 18.5,
+  agencyName: '',
+};
+function save() {
+  try {
+    localStorage.setItem('leadforge_v1', JSON.stringify({
+      leads: state.leads, activeLeadId: state.activeLeadId,
+      fxRate: state.fxRate, agencyName: state.agencyName,
+    }));
+  } catch (e) { /* storage full / unavailable — app still works in-memory */ }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem('leadforge_v1');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    state.leads = Array.isArray(d.leads) ? d.leads : [];
+    state.activeLeadId = d.activeLeadId || null;
+    state.fxRate = d.fxRate || 18.5;
+    state.agencyName = d.agencyName || '';
+  } catch (e) { /* corrupt storage — start clean */ }
+}
+const activeLead = () => state.leads.find(l => l.id === state.activeLeadId) || null;
+const uid = () => 'ld_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/* ─────────────── small utils ─────────────── */
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(msg, kind = 'ok') {
+  const t = $('toast');
+  t.textContent = msg; t.className = 'toast show ' + kind;
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200);
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) {
+    // clipboard API blocked (iframe/permissions) — textarea fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (_) {}
+    ta.remove(); return ok;
+  }
+}
+function wireCopyButtons(root) {
+  root.querySelectorAll('[data-copy]').forEach(btn => {
+    btn.onclick = async () => {
+      const src = btn.getAttribute('data-copy');
+      const el = document.getElementById(src);
+      const ok = await copyText(el ? (el.dataset.raw ?? el.innerText) : src);
+      if (ok) { btn.classList.add('copied'); const old = btn.textContent; btn.textContent = 'copied ✓';
+        setTimeout(() => { btn.classList.remove('copied'); btn.textContent = old; }, 1600); }
+      else toast('Copy failed — select and copy manually', 'err');
+    };
+  });
+}
+const fx = () => parseFloat($('fxRate').value) || state.fxRate || 18.5;
+const usd = n => '$' + Math.round(n).toLocaleString('en-US');
+const zar = n => 'R' + Math.round(n * fx()).toLocaleString('en-ZA');
+const money = n => `<span class="money">${usd(n)} <span class="zar">≈ ${zar(n)}</span></span>`;
+function loadingHTML(msg, step) {
+  return `<div class="loading"><div class="spinner"></div><div>${esc(msg)}</div>${step ? `<div class="loading-step">${esc(step)}</div>` : ''}</div>`;
+}
+function errorHTML(msg, retryId) {
+  return `<div class="banner error">⚠ ${esc(msg)}${retryId ? `<button class="btn ghost small banner-retry" id="${retryId}">Retry</button>` : ''}</div>`;
+}
+function emptyHTML(icon, text, cta) {
+  return `<div class="empty"><div class="empty-icon">${icon}</div><p>${text}</p>${cta || ''}</div>`;
+}
+// minimal markdown → HTML (headings, bold, lists, hr, paragraphs) for docs
+function md(src) {
+  const lines = String(src || '').split('\n');
+  let html = '', inUl = false, inOl = false;
+  const closeLists = () => { if (inUl) { html += '</ul>'; inUl = false; } if (inOl) { html += '</ol>'; inOl = false; } };
+  const inline = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>');
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (/^#{3,}\s/.test(line)) { closeLists(); html += `<h3>${inline(line.replace(/^#+\s*/, ''))}</h3>`; }
+    else if (/^##\s/.test(line)) { closeLists(); html += `<h2>${inline(line.replace(/^#+\s*/, ''))}</h2>`; }
+    else if (/^#\s/.test(line)) { closeLists(); html += `<h1>${inline(line.replace(/^#+\s*/, ''))}</h1>`; }
+    else if (/^(---|\*\*\*)$/.test(line.trim())) { closeLists(); html += '<hr>'; }
+    else if (/^\s*[-*]\s+/.test(line)) { if (!inUl) { closeLists(); html += '<ul>'; inUl = true; } html += `<li>${inline(line.replace(/^\s*[-*]\s+/, ''))}</li>`; }
+    else if (/^\s*\d+[.)]\s+/.test(line)) { if (!inOl) { closeLists(); html += '<ol>'; inOl = true; } html += `<li>${inline(line.replace(/^\s*\d+[.)]\s+/, ''))}</li>`; }
+    else if (line.trim() === '') { closeLists(); }
+    else { closeLists(); html += `<p>${inline(line)}</p>`; }
+  }
+  closeLists(); return html;
+}
+function downloadFile(name, text) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/markdown' }));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ─────────────── API layer: proxy detection + call ─────────────── */
+async function detectMode() {
+  try {
+    const r = await fetch('/api/health', { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      const h = await r.json();
+      state.apiMode = 'proxy';
+      state.leadsSearchMode = h.leadsSearch === 'live' ? 'live' : 'stub';
+      $('modeBadge').className = 'mode-badge proxy';
+      $('modeText').textContent = 'railway proxy';
+      renderDiscoverBanner();
+      return;
+    }
+  } catch (e) { /* no proxy — Claude.ai preview */ }
+  state.apiMode = 'direct';
+  $('modeBadge').className = 'mode-badge direct';
+  $('modeText').textContent = 'direct (preview)';
+  renderDiscoverBanner();
+}
+async function callClaude(prompt, { system = '', maxTokens = 4000 } = {}) {
+  const body = {
+    model: MODEL, max_tokens: maxTokens,
+    ...(system ? { system } : {}),
+    messages: [{ role: 'user', content: prompt }],
+  };
+  const url = state.apiMode === 'proxy' ? '/api/generate' : 'https://api.anthropic.com/v1/messages';
+  const headers = { 'Content-Type': 'application/json' };
+  if (state.apiMode !== 'proxy') headers['anthropic-dangerous-direct-browser-access'] = 'true';
+  const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data) {
+    const detail = data && (data.error?.message || data.error || data.message);
+    throw new Error(detail ? String(detail).slice(0, 200) : `API request failed (${res.status})`);
+  }
+  return (data.content || []).map(b => b.type === 'text' ? b.text : '').filter(Boolean).join('\n');
+}
+
+/* ─────────────── JSON safety chain ───────────────
+   Layered parse: fences → brace trim → regex repair → char-level
+   state machine → model self-repair retry. */
+function stripFences(t) { return t.replace(/```(?:json)?/gi, '').trim(); }
+function trimToBraces(t) {
+  const a = Math.min(...['{', '['].map(c => { const i = t.indexOf(c); return i === -1 ? Infinity : i; }));
+  if (a === Infinity) return t;
+  const open = t[a], close = open === '{' ? '}' : ']';
+  const b = t.lastIndexOf(close);
+  return b > a ? t.slice(a, b + 1) : t.slice(a);
+}
+function regexRepair(t) {
+  return t
+    .replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'")
+    .replace(/,\s*([}\]])/g, '$1')           // trailing commas
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, ' '); // control chars
+}
+function stateMachineExtract(t) {
+  // walks characters, tracks string/escape state, returns first balanced JSON value
+  const start = Math.min(...['{', '['].map(c => { const i = t.indexOf(c); return i === -1 ? Infinity : i; }));
+  if (start === Infinity) return null;
+  let depth = 0, inStr = false, escN = false;
+  for (let i = start; i < t.length; i++) {
+    const ch = t[i];
+    if (escN) { escN = false; continue; }
+    if (ch === '\\') { if (inStr) escN = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === '{' || ch === '[') depth++;
+    else if (ch === '}' || ch === ']') { depth--; if (depth === 0) return t.slice(start, i + 1); }
+  }
+  // truncated output — try closing open structures
+  let candidate = t.slice(start);
+  if (inStr) candidate += '"';
+  candidate = candidate.replace(/,\s*$/, '');
+  while (depth-- > 0) candidate += (candidate.lastIndexOf('[') > candidate.lastIndexOf('{')) ? ']' : '}';
+  return candidate;
+}
+async function parseJSONSafe(text, { allowRepairCall = true } = {}) {
+  const attempts = [];
+  let t = stripFences(text);
+  attempts.push(t, trimToBraces(t));
+  attempts.push(regexRepair(attempts[1]));
+  const sm = stateMachineExtract(regexRepair(t));
+  if (sm) attempts.push(sm);
+  for (const a of attempts) { try { return JSON.parse(a); } catch (e) { /* next layer */ } }
+  if (allowRepairCall) {
+    // final layer: ask the model to repair its own output
+    const fixed = await callClaude(
+      'The following text was supposed to be a single valid JSON value but fails to parse. ' +
+      'Return ONLY the corrected JSON — no commentary, no markdown fences.\n\n' + text.slice(0, 6000),
+      { maxTokens: 4000 });
+    return parseJSONSafe(fixed, { allowRepairCall: false });
+  }
+  throw new Error('Could not parse the model response as JSON after all repair layers.');
+}
+async function askJSON(prompt, { system = '', maxTokens = 4000 } = {}) {
+  const sys = (system ? system + ' ' : '') +
+    'CRITICAL OUTPUT RULE: respond with ONLY a single valid JSON value. No preamble, no explanation, no markdown code fences. Use plain double quotes. Use \\n inside strings for line breaks.';
+  const raw = await callClaude(prompt, { system: sys, maxTokens });
+  return parseJSONSafe(raw);
+}
+
+/* ─────────────── pipeline board ─────────────── */
+function renderPipeline() {
+  const board = $('stagesBoard');
+  board.innerHTML = STAGES.map((s, i) => {
+    const leads = state.leads.filter(l => l.stage === s.key);
+    return `<div class="stage ${leads.length ? 'lit' : ''}">
+      <div class="node">${leads.length || i + 1}</div>
+      <div class="stage-name">${s.label}</div>
+      <div class="stage-leads">${leads.map(l =>
+        `<div class="lead-chip ${l.id === state.activeLeadId ? 'active' : ''}" data-lead="${l.id}" title="${esc(l.name)}">
+          ${esc(l.name)}<span class="chip-pain">${esc(l.painPoint)}${l.source === 'template' ? ' · practice' : ''}</span>
+        </div>`).join('')}</div>
+    </div>`;
+  }).join('');
+  board.querySelectorAll('[data-lead]').forEach(chip => {
+    chip.onclick = () => { selectLead(chip.getAttribute('data-lead')); };
+  });
+  const closedValue = state.leads
+    .filter(l => (l.stage === 'closed' || l.stage === 'delivered') && l.pkg)
+    .reduce((sum, l) => sum + (l.pkg.priceUSD || 0), 0);
+  $('pipelineRev').innerHTML = `${usd(closedValue)} <span style="color:var(--muted)">≈ ${zar(closedValue)} closed</span>`;
+}
+function selectLead(id) {
+  state.activeLeadId = id; save(); renderPipeline();
+  renderOutreach(); renderPricing(); renderContract(); renderDelivery();
+  toast('Active lead: ' + (activeLead()?.name || ''));
+}
+function leadBar(containerId, opts = {}) {
+  const el = $(containerId);
+  const l = activeLead();
+  if (!l) {
+    el.innerHTML = `<div class="banner info">No active lead selected. Scout or add a lead in <b>&nbsp;Discover&nbsp;</b> and click it in the pipeline board above.</div>`;
+    return null;
+  }
+  const stageOpts = STAGES.map(s => `<option value="${s.key}" ${l.stage === s.key ? 'selected' : ''}>${s.label}</option>`).join('');
+  el.innerHTML = `<div class="lead-detail-bar">
+    <span class="ld-name">${esc(l.name)}</span>
+    <span class="pill ${esc(l.painPoint)}">${esc(l.painPoint.replace(/-/g, ' '))}</span>
+    <span class="ld-meta">${esc(l.industry)} · ${esc(l.location)}${l.source === 'template' ? ' · PRACTICE LEAD' : ''}</span>
+    ${l.pkg ? `<span class="ld-meta" style="color:var(--gold)">pkg: ${esc(l.pkg.name)} · ${usd(l.pkg.priceUSD)}</span>` : ''}
+    <span class="spacer"></span>
+    <select class="stage-select" data-stage-select>${stageOpts}</select>
+    <button class="btn danger small" data-del>Remove</button>
+  </div>`;
+  el.querySelector('[data-stage-select]').onchange = e => {
+    l.stage = e.target.value; save(); renderPipeline(); toast('Moved to ' + STAGES.find(s => s.key === l.stage).label);
+  };
+  el.querySelector('[data-del]').onclick = () => {
+    if (!confirm(`Remove "${l.name}" from the pipeline? This deletes its outreach, proposal and delivery work.`)) return;
+    state.leads = state.leads.filter(x => x.id !== l.id);
+    if (state.activeLeadId === l.id) state.activeLeadId = state.leads[0]?.id || null;
+    save(); renderPipeline(); renderOutreach(); renderPricing(); renderContract(); renderDelivery();
+  };
+  return l;
+}
+
+/* ─────────────── nav ─────────────── */
+document.querySelectorAll('#mainNav button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#mainNav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('section.tab').forEach(s => s.classList.remove('visible'));
+    $('tab-' + btn.dataset.tab).classList.add('visible');
+  };
+});
+function gotoTab(key) { document.querySelector(`#mainNav button[data-tab="${key}"]`).click(); }
+
+/* ═══════════ SECTION 1 — DISCOVER ═══════════ */
+function renderDiscoverBanner() {
+  const el = $('discoverModeBanner');
+  if (state.leadsSearchMode === 'live') {
+    el.innerHTML = `<div class="banner info">✦ <b>Live mode</b> — lead search is wired to Google Places. Results are real businesses; entries with no website are flagged as your hottest leads.</div>`;
+  } else {
+    el.innerHTML = `<div class="banner warn">⚑ <b>Practice / template mode.</b> The AI cannot know which real businesses currently have no website — that needs a live source. These are realistic <b>example lead profiles</b> for testing your pitch workflow end to end. To go live: add a Google Places key on Railway and implement the commented <span style="font-family:var(--font-mono)">/api/leads-search</span> stub in server.js — no frontend changes needed.</div>`;
+  }
+}
+async function discover() {
+  const industry = $('discIndustry').value.trim();
+  const location = $('discLocation').value.trim();
+  const out = $('discoverResults');
+  if (!industry || !location) { toast('Enter both an industry and a location', 'err'); return; }
+  $('btnDiscover').disabled = true;
+
+  // 1) try the real endpoint first — activates automatically once wired
+  if (state.apiMode === 'proxy') {
+    out.innerHTML = loadingHTML('Checking live lead source…');
+    try {
+      const r = await fetch('/api/leads-search', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ industry, location }),
+      });
+      if (r.ok) {
+        const data = await r.json();
+        renderDiscoverResults((data.leads || []).map(p => ({
+          businessName: p.businessName, profileType: p.address || '',
+          noWebsiteLikelihood: p.website ? 'medium' : 'high',
+          reasoning: p.website ? `Has a site (${p.website}) — pitch a rebuild/refresh.` : `No website listed on Google — ${p.reviews || 0} reviews prove real demand with zero web presence.`,
+          painPoint: p.painPoint || 'no-site',
+          hook: p.website ? 'Your Google reviews are strong but the site under them is letting you down.' : `People are already finding you on Maps — a site converts that attention into bookings.`,
+          notes: [p.phone, p.mapsUrl].filter(Boolean).join(' · '),
+          source: 'live',
+        })), industry, location, 'live');
+        $('btnDiscover').disabled = false; return;
+      }
+      // 501 = stub — fall through to practice mode
+    } catch (e) { /* fall through */ }
+  }
+
+  // 2) practice mode — AI-generated realistic profiles
+  out.innerHTML = loadingHTML('Scouting realistic lead profiles…', `${industry} · ${location} · practice mode`);
+  try {
+    const data = await askJSON(
+`You are a B2B lead-research analyst for a solo web design agency in South Africa.
+Industry: "${industry}". Location: "${location}".
+Generate 7 realistic EXAMPLE profiles of local businesses in this niche and area that are most likely to have no website or a weak one. These are illustrative archetypes for pitch practice — invent plausible business names in the local naming style (do NOT claim they are real businesses).
+Return JSON: {"leads":[{"businessName":"...","profileType":"one-line description of the business archetype (size, vibe, how they currently get customers)","noWebsiteLikelihood":"high"|"medium","reasoning":"2 sentences: WHY this type of business in this area typically lacks a strong site (word-of-mouth reliance, Facebook-page-only, owner-operated, industry norms)","painPoint":"no-site"|"outdated-site"|"no-booking","hook":"one specific, non-generic opening angle a salesperson could use with this exact business"}]}
+Vary the archetypes meaningfully. Ground reasoning in how this industry actually operates locally.`,
+      { maxTokens: 3500 });
+    if (!data || !Array.isArray(data.leads) || !data.leads.length) throw new Error('Model returned no lead profiles.');
+    renderDiscoverResults(data.leads.map(l => ({ ...l, source: 'template' })), industry, location, 'template');
+  } catch (e) {
+    out.innerHTML = errorHTML('Lead scouting failed: ' + e.message, 'retryDiscover');
+    const r = $('retryDiscover'); if (r) r.onclick = discover;
+  } finally { $('btnDiscover').disabled = false; }
+}
+function renderDiscoverResults(items, industry, location, mode) {
+  const out = $('discoverResults');
+  if (!items.length) {
+    out.innerHTML = emptyHTML('◌', 'No leads came back for that search. Try a broader industry term or a bigger area.');
+    return;
+  }
+  out.innerHTML = `<div class="panel">
+    <h3>${mode === 'live' ? 'Live results' : 'Lead profiles'} — ${esc(industry)}, ${esc(location)}</h3>
+    <p class="sub">${mode === 'live' ? 'Real businesses from Google Places. No-website entries first.' : 'Example archetypes for practicing the full pitch → close → deliver flow.'}</p>
+    <div class="cards-grid">${items.map((l, i) => `
+      <div class="lead-card">
+        <div class="row" style="gap:6px">
+          <span class="pill ${esc(l.painPoint)}">${esc((l.painPoint || '').replace(/-/g, ' '))}</span>
+          <span class="pill ${l.noWebsiteLikelihood === 'high' ? 'high' : ''}">${esc(l.noWebsiteLikelihood)} likelihood</span>
+        </div>
+        <h4>${esc(l.businessName)}</h4>
+        <div class="reason">${esc(l.profileType || '')}</div>
+        <div class="reason"><b style="color:var(--text)">Why likely no strong site:</b> ${esc(l.reasoning)}</div>
+        <div class="hook">“${esc(l.hook)}”</div>
+        <button class="btn ghost small" data-add="${i}">Add to pipeline →</button>
+      </div>`).join('')}</div>
+  </div>`;
+  out.querySelectorAll('[data-add]').forEach(btn => {
+    btn.onclick = () => {
+      const l = items[+btn.getAttribute('data-add')];
+      addLead({
+        name: l.businessName, industry, location,
+        painPoint: l.painPoint || 'no-site',
+        notes: [l.profileType, l.notes].filter(Boolean).join(' · '),
+        hook: l.hook, reasoning: l.reasoning, source: l.source || 'template',
+      });
+      btn.disabled = true; btn.textContent = 'In pipeline ✓';
+    };
+  });
+}
+function addLead(partial) {
+  const lead = {
+    id: uid(), stage: 'new', createdAt: Date.now(),
+    outreach: null, pkg: null, estimate: null, contract: null, proposal: null, delivery: null,
+    ...partial,
+  };
+  state.leads.push(lead);
+  state.activeLeadId = lead.id;
+  save(); renderPipeline(); renderOutreach(); renderPricing(); renderContract(); renderDelivery();
+  toast(lead.name + ' added to pipeline');
+}
+$('btnDiscover').onclick = discover;
+$('btnAddManual').onclick = () => {
+  const name = $('manName').value.trim();
+  if (!name) { toast('Give the lead a business name', 'err'); return; }
+  addLead({
+    name,
+    industry: $('manIndustry').value.trim() || 'local business',
+    location: $('manLocation').value.trim() || '—',
+    painPoint: $('manPain').value,
+    notes: $('manNotes').value.trim(),
+    source: 'real',
+  });
+  ['manName', 'manIndustry', 'manLocation', 'manNotes'].forEach(id => $(id).value = '');
+};
+
+/* ═══════════ SECTION 2 — OUTREACH ═══════════ */
+const PAIN_LABEL = {
+  'no-site': 'no website at all',
+  'outdated-site': 'an outdated or broken website',
+  'no-booking': 'no online booking or enquiry system',
+};
+function renderOutreach() {
+  const l = leadBar('outreachLeadBar');
+  const out = $('outreachContent');
+  if (!l) { out.innerHTML = ''; return; }
+  if (!l.outreach) {
+    out.innerHTML = `<div class="panel">${emptyHTML('✉',
+      `No outreach sequence yet for <b>${esc(l.name)}</b>. Generate a 5-touch sequence tuned to their pain point (${esc(PAIN_LABEL[l.painPoint] || l.painPoint)}).`,
+      `<button class="btn" id="btnGenSeq">Generate outreach sequence</button>`)}</div>`;
+    $('btnGenSeq').onclick = () => genOutreach(l);
+    return;
+  }
+  const s = l.outreach;
+  const block = (id, title, meta, text) => `
+    <div class="msg-block">
+      <div class="msg-head"><span class="msg-title">${title}</span><span class="msg-meta">${meta}</span>
+        <button class="copy-btn" data-copy="${id}">copy</button></div>
+      <div class="msg-body" id="${id}">${esc(text)}</div>
+    </div>`;
+  const emailBlock = (id, title, meta, subject, body) => `
+    <div class="msg-block">
+      <div class="msg-head"><span class="msg-title">${title}</span><span class="msg-meta">${meta}</span>
+        <button class="copy-btn" data-copy="${id}">copy</button></div>
+      <div class="msg-body" id="${id}" data-raw="${esc('Subject: ' + subject + '\n\n' + body)}"><span class="subj">Subject: ${esc(subject)}</span>${esc(body)}</div>
+    </div>`;
+  out.innerHTML = `<div class="panel">
+    <div class="row mb" style="justify-content:space-between">
+      <h3>Outreach sequence — ${esc(l.name)}</h3>
+      <div class="row">
+        <button class="btn ghost small" id="btnReSeq">Regenerate</button>
+        ${l.stage === 'new' ? '<button class="btn small" id="btnMarkContacted">Mark contacted →</button>' : ''}
+      </div>
+    </div>
+    <p class="sub">Every message references their specific pain point: ${esc(PAIN_LABEL[l.painPoint] || l.painPoint)}.</p>
+    <div class="grid-2">
+      <div>
+        ${block('sq1', 'Touch 1 · LinkedIn connection note', 'day 1 · ' + (s.linkedinConnect || '').length + '/300 chars', s.linkedinConnect)}
+        ${block('sq2', 'Touch 2 · LinkedIn follow-up', 'day 3 · value, no ask', s.linkedinFollowup)}
+        ${block('sq5', 'Bonus · WhatsApp opener', 'SA market · after day 3', s.whatsappMessage || '')}
+      </div>
+      <div>
+        ${emailBlock('sq3', 'Touch 3 · Cold email', 'day 7 · the offer', s.coldEmail?.subject || '', s.coldEmail?.body || '')}
+        ${emailBlock('sq4', 'Touch 4 · Follow-up email', 'day 14 · break-up', s.followupEmail?.subject || '', s.followupEmail?.body || '')}
+      </div>
+    </div>
+  </div>`;
+  wireCopyButtons(out);
+  $('btnReSeq').onclick = () => genOutreach(l);
+  const mc = $('btnMarkContacted');
+  if (mc) mc.onclick = () => { l.stage = 'contacted'; save(); renderPipeline(); renderOutreach(); };
+}
+async function genOutreach(l) {
+  const out = $('outreachContent');
+  out.innerHTML = `<div class="panel">${loadingHTML('Writing the 5-touch sequence…', l.name + ' · ' + l.painPoint)}</div>`;
+  try {
+    const agency = state.agencyName || $('agencyName').value.trim() || 'a solo web design studio';
+    const data = await askJSON(
+`You are an elite B2B cold-outreach copywriter for a solo web designer ("${agency}", based in South Africa) selling affordable professional websites to local businesses.
+Target lead: ${JSON.stringify({ name: l.name, industry: l.industry, location: l.location, painPoint: PAIN_LABEL[l.painPoint], notes: l.notes || '', angle: l.hook || '' })}
+Write a complete outreach sequence. Rules: outcome-focused (more calls, more bookings, found on Google), never technical jargon; specific to THIS business and pain point; short sentences; no fake familiarity; no "I hope this finds you well"; sound like a sharp human, not a template. South African register is fine.
+Return JSON:
+{"linkedinConnect":"max 290 chars, curiosity-first, NO pitch",
+"linkedinFollowup":"day-3 message: one genuinely useful, specific observation about their online presence, zero ask, 3-5 sentences",
+"whatsappMessage":"short friendly WhatsApp opener, feels personal not corporate, one soft question at the end",
+"coldEmail":{"subject":"max 6 words, specific, lowercase ok","body":"90-130 words: pain point -> concrete outcome -> proof-style credibility line -> ONE low-friction CTA (10-min call or free homepage mockup). End with a simple sign-off placeholder [Your name]."},
+"followupEmail":{"subject":"...","body":"50-80 words breakup email: polite, takes pressure off, leaves door open, one final micro-CTA"}}`,
+      { maxTokens: 2500 });
+    if (!data || !data.linkedinConnect || !data.coldEmail) throw new Error('Sequence came back incomplete.');
+    l.outreach = data; save(); renderOutreach();
+    toast('Outreach sequence ready');
+  } catch (e) {
+    out.innerHTML = `<div class="panel">${errorHTML('Sequence generation failed: ' + e.message, 'retrySeq')}</div>`;
+    const r = $('retrySeq'); if (r) r.onclick = () => genOutreach(l);
+  }
+}
+
+/* ═══════════ SECTION 3 — PACKAGES & PRICING ═══════════ */
+const DEFAULT_PKGS = [
+  { tier: 'STARTER', name: 'Launch Page', priceUSD: 300, turnaround: '5 working days', featured: false,
+    includes: ['1-page high-converting landing page', 'Mobile-first, fast-loading design', 'Click-to-call + WhatsApp button', 'Contact / enquiry form', 'Google Business Profile setup', '1 round of revisions'] },
+  { tier: 'BUSINESS', name: 'Business Site', priceUSD: 750, turnaround: '10 working days', featured: true,
+    includes: ['Up to 5 pages (Home, About, Services, Gallery, Contact)', 'Copywriting for every page', 'On-page SEO basics (titles, meta, local keywords)', 'Google Maps + reviews embed', 'Contact forms + WhatsApp integration', '2 rounds of revisions', '30 days post-launch support'] },
+  { tier: 'GROWTH', name: 'Growth Engine', priceUSD: 1500, turnaround: '15-20 working days', featured: false,
+    includes: ['Up to 10 pages, fully custom design', 'Online booking / appointment system', 'Local SEO setup + Search Console', 'Blog engine + 2 starter articles', 'Email capture + basic automation', 'Analytics dashboard walkthrough', '3 rounds of revisions', '60 days post-launch support'] },
+];
+const EST_FEATURES = [
+  { key: 'booking',  label: 'Online booking',        usd: 150, days: 2 },
+  { key: 'ecom',     label: 'E-commerce (≤30 products)', usd: 400, days: 5 },
+  { key: 'forms',    label: 'Custom forms / quotes',  usd: 60,  days: 1 },
+  { key: 'blog',     label: 'Blog engine',            usd: 120, days: 1 },
+  { key: 'seo',      label: 'Local SEO setup',        usd: 150, days: 1 },
+  { key: 'brand',    label: 'Logo / basic brand kit', usd: 120, days: 2 },
+  { key: 'gallery',  label: 'Large photo gallery',    usd: 60,  days: 1 },
+  { key: 'maint',    label: 'Monthly maintenance',    usd: 50,  days: 0, recurring: true },
+];
+function renderPricing() {
+  leadBar('pricingLeadBar');
+  renderPkgGrid(getPkgs());
+  if (!$('estFeatures').children.length) {
+    $('estFeatures').innerHTML = EST_FEATURES.map(f => `
+      <label class="feature-toggle"><input type="checkbox" data-feat="${f.key}">
+        ${f.label}<span class="f-price">+${usd(f.usd)}${f.recurring ? '/mo' : ''}</span></label>`).join('');
+  }
+}
+function getPkgs() {
+  const l = activeLead();
+  return (l && l.tailoredPkgs) ? l.tailoredPkgs : DEFAULT_PKGS;
+}
+function renderPkgGrid(pkgs) {
+  const l = activeLead();
+  $('pkgGrid').innerHTML = pkgs.map((p, i) => `
+    <div class="pkg-card ${p.featured ? 'featured' : ''}">
+      <div class="pkg-tier">${esc(p.tier)}${p.featured ? ' · MOST SOLD' : ''}</div>
+      <h4>${esc(p.name)}</h4>
+      <div class="pkg-price">${usd(p.priceUSD)}<small>≈ ${zar(p.priceUSD)} · ${esc(p.turnaround)}</small></div>
+      <ul>${p.includes.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      <div class="pkg-turn">turnaround: ${esc(p.turnaround)}</div>
+      <button class="btn ${l && l.pkg && l.pkg.name === p.name ? '' : 'ghost'} small" data-pick="${i}" ${l ? '' : 'disabled title="Select a lead first"'}>
+        ${l && l.pkg && l.pkg.name === p.name ? 'Selected for ' + esc(l.name) + ' ✓' : 'Select for active lead'}</button>
+    </div>`).join('');
+  $('pkgGrid').querySelectorAll('[data-pick]').forEach(btn => {
+    btn.onclick = () => {
+      const lead = activeLead(); if (!lead) return;
+      lead.pkg = { ...pkgs[+btn.getAttribute('data-pick')] };
+      save(); renderPipeline(); renderPricing(); renderContract(); renderDelivery();
+      toast(`${lead.pkg.name} assigned to ${lead.name}`);
+    };
+  });
+}
+$('btnTailorPkgs').onclick = async () => {
+  const l = activeLead();
+  if (!l) { toast('Select a lead first', 'err'); return; }
+  const btn = $('btnTailorPkgs'); btn.disabled = true; btn.textContent = 'Tailoring…';
+  try {
+    const data = await askJSON(
+`You are pricing strategist for a solo South African web studio selling to local businesses at Tier-1-friendly USD rates.
+Lead: ${l.name}, industry: ${l.industry}, location: ${l.location}, pain point: ${PAIN_LABEL[l.painPoint]}.
+Adapt this 3-tier package ladder to THIS industry — rename tiers with industry-relevant names, swap inclusions for what this business type actually needs (e.g. plumbers: emergency call CTA + service-area pages; restaurants: menu + reservations; guest houses: booking + gallery). Keep prices within ±25% of the baselines: $300 / $750 / $1500.
+Return JSON: {"packages":[{"tier":"STARTER","name":"...","priceUSD":300,"turnaround":"5 working days","featured":false,"includes":["...","..."]},{...featured:true middle tier...},{...}]}`,
+      { maxTokens: 2200 });
+    if (!data || !Array.isArray(data.packages) || data.packages.length !== 3) throw new Error('Expected exactly 3 packages back.');
+    l.tailoredPkgs = data.packages; save(); renderPkgGrid(l.tailoredPkgs);
+    toast('Packages tailored to ' + l.industry);
+  } catch (e) { toast('Tailoring failed: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = "Tailor to lead's industry ✦"; }
+};
+
+/* estimator — deterministic scope model, AI sense-check optional */
+function computeEstimate() {
+  const pages = Math.max(1, Math.min(40, +$('estPages').value || 1));
+  const aiCopy = $('estCopy').value === 'ai';
+  const feats = [...document.querySelectorAll('[data-feat]:checked')].map(cb => EST_FEATURES.find(f => f.key === cb.getAttribute('data-feat')));
+  const lines = [];
+  let total = 220 + (pages - 1) * 65;                     // base + per-page
+  lines.push({ label: `Base build · ${pages} page${pages > 1 ? 's' : ''}`, usd: total });
+  if (aiCopy) { const c = pages * 30; total += c; lines.push({ label: 'Copywriting · all pages', usd: c }); }
+  let monthly = 0, days = 4 + Math.ceil(pages / 2);
+  feats.forEach(f => {
+    if (f.recurring) { monthly += f.usd; }
+    else { total += f.usd; lines.push({ label: f.label, usd: f.usd }); }
+    days += f.days;
+  });
+  const notes = $('estNotes').value.trim();
+  if (notes) { const c = Math.round(total * 0.12); total += c; days += 2; lines.push({ label: 'Custom-scope buffer (12%)', usd: c }); }
+  return { pages, feats: feats.map(f => f.label), lines, total: Math.round(total / 10) * 10, monthly, days, notes, aiCopy };
+}
+function renderEstimate(est, aiNote) {
+  $('estOutput').innerHTML = `<div class="est-result">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div>
+        <div class="hint">FAIR BUILD PRICE</div>
+        <div class="est-price">${usd(est.total)}</div>
+        <div class="hint">≈ ${zar(est.total)} · deposit ${usd(est.total / 2)} to start${est.monthly ? ` · +${usd(est.monthly)}/mo maintenance` : ''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="hint">TIMELINE</div>
+        <div class="est-price" style="font-size:22px">${est.days}–${est.days + 3} days</div>
+      </div>
+    </div>
+    <div class="mt">${est.lines.map(li => `<div class="est-line">${esc(li.label)}<b>${usd(li.usd)}</b></div>`).join('')}</div>
+    ${aiNote ? `<div class="banner info mt" style="margin-bottom:0">✦ ${esc(aiNote)}</div>` : ''}
+    <div class="row mt">
+      <button class="btn ghost small" id="btnEstAssign">Attach estimate to active lead</button>
+      <button class="copy-btn" data-copy="${esc(`Website build estimate: ${usd(est.total)} (~${zar(est.total)}) · ${est.pages} pages · ${est.feats.join(', ') || 'no add-ons'} · timeline ${est.days}-${est.days + 3} working days · 50% deposit to start`)}">copy summary</button>
+    </div>
+  </div>`;
+  wireCopyButtons($('estOutput'));
+  $('btnEstAssign').onclick = () => {
+    const l = activeLead(); if (!l) { toast('Select a lead first', 'err'); return; }
+    l.estimate = est; save(); toast('Estimate attached to ' + l.name); renderContract();
+  };
+}
+$('btnEstimate').onclick = () => renderEstimate(computeEstimate());
+$('btnEstAI').onclick = async () => {
+  const est = computeEstimate();
+  renderEstimate(est);
+  const btn = $('btnEstAI'); btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const data = await askJSON(
+`A solo South African web designer quoted this scope: ${est.pages} pages, features: ${est.feats.join(', ') || 'none'}, copywriting: ${est.aiCopy ? 'included' : 'client-supplied'}, extras: "${est.notes || 'none'}". Quote: $${est.total} USD, ${est.days}-${est.days + 3} working days.
+Sense-check it in 2-3 sentences: is this fair for the scope, is anything under/over-priced, and one concrete upsell suggestion. Return JSON: {"note":"..."}`,
+      { maxTokens: 500 });
+    renderEstimate(est, data.note || 'Looks reasonable.');
+  } catch (e) { toast('AI check failed: ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = 'AI sense-check the estimate ✦'; }
+};
+
+/* ═══════════ SECTION 4 — CONTRACT & CLOSE ═══════════ */
+function renderContract() {
+  const l = leadBar('contractLeadBar');
+  const hint = $('contractHint');
+  const out = $('contractOutput');
+  if (!l) { out.innerHTML = ''; hint.textContent = ''; return; }
+  hint.textContent = l.pkg ? `Using package: ${l.pkg.name} · ${usd(l.pkg.priceUSD)}` : (l.estimate ? `Using custom estimate: ${usd(l.estimate.total)}` : '⚠ pick a package or attach an estimate in Section 3 first');
+  if ($('agencyName').value === '' && state.agencyName) $('agencyName').value = state.agencyName;
+  if (!l.contract) {
+    out.innerHTML = `<div class="panel no-print">${emptyHTML('§', `No contract or proposal yet for <b>${esc(l.name)}</b>. Generate them once a package or estimate is attached.`)}</div>`;
+    return;
+  }
+  out.innerHTML = `
+    <div class="doc-toolbar">
+      <button class="btn small" id="btnPrintDocs">Print / Save as PDF</button>
+      <button class="copy-btn" data-copy="rawProposal">copy proposal (markdown)</button>
+      <button class="copy-btn" data-copy="rawContract">copy contract (markdown)</button>
+      <button class="btn ghost small" id="btnMarkProposal" ${l.stage === 'proposal' || l.stage === 'closed' || l.stage === 'delivered' ? 'disabled' : ''}>Mark proposal sent →</button>
+      <button class="btn small" id="btnMarkClosed" ${l.stage === 'closed' || l.stage === 'delivered' ? 'disabled' : ''}>🤝 Mark closed</button>
+    </div>
+    <div class="panel print-target"><div class="doc">${md(l.proposal)}<hr>${md(l.contract)}</div></div>
+    <div id="rawProposal" data-raw="${esc(l.proposal)}" style="display:none"></div>
+    <div id="rawContract" data-raw="${esc(l.contract)}" style="display:none"></div>`;
+  wireCopyButtons(out);
+  $('btnPrintDocs').onclick = () => window.print();
+  $('btnMarkProposal').onclick = () => { l.stage = 'proposal'; save(); renderPipeline(); renderContract(); toast('Proposal sent 📨'); };
+  $('btnMarkClosed').onclick = () => { l.stage = 'closed'; save(); renderPipeline(); renderContract(); toast('Deal closed — go to Site Delivery', 'ok'); };
+}
+$('btnContract').onclick = async () => {
+  const l = activeLead();
+  if (!l) { toast('Select a lead first', 'err'); return; }
+  const scope = l.pkg || (l.estimate ? { name: 'Custom scope', priceUSD: l.estimate.total, turnaround: `${l.estimate.days}-${l.estimate.days + 3} working days`, includes: [`${l.estimate.pages}-page website`, ...l.estimate.feats] } : null);
+  if (!scope) { toast('Attach a package or estimate in Section 3 first', 'err'); gotoTab('pricing'); return; }
+  state.agencyName = $('agencyName').value.trim() || state.agencyName; save();
+  const agency = state.agencyName || '[Your Name / Studio]';
+  const dep = +$('depositPct').value;
+  const out = $('contractOutput');
+  out.innerHTML = `<div class="panel no-print">${loadingHTML('Drafting proposal + service agreement…', l.name + ' · ' + scope.name)}</div>`;
+  try {
+    const data = await askJSON(
+`Draft two client-ready documents in markdown for a solo web design studio. Plain language, professional, no legalese walls. Currency shows both: $X USD (≈ RY ZAR at ${fx()}).
+Provider: ${agency} (South Africa). Client: ${l.name} (${l.industry}, ${l.location}). Pain point being solved: ${PAIN_LABEL[l.painPoint]}.
+Package: ${scope.name} — $${scope.priceUSD} USD — turnaround ${scope.turnaround} — includes: ${scope.includes.join('; ')}.
+Payment terms: ${dep}% deposit to begin, ${100 - dep}% on delivery before site handover/go-live.
+Return JSON: {"proposal":"markdown one-pager: # title, a 2-sentence 'the problem' section referencing their pain point, 'the solution' section, what's included list, a short mockup description paragraph (describe what their homepage will look and feel like — hero, imagery style, CTA), price + payment terms, timeline, next step (sign + pay deposit). Sell outcomes.","contract":"markdown simple service agreement: parties + date placeholder [DATE], scope of work (the inclusions verbatim), price & payment schedule (${dep}/${100 - dep}), timeline (starts on deposit receipt), 2 revision rounds then $40/round, client responsibilities (content, feedback within 3 business days), what's NOT included (hosting/domain fees are client's, ongoing changes after handover), ownership transfers on final payment, either party may cancel with 7 days notice (deposit non-refundable once work begins), signature lines for both parties"}`,
+      { maxTokens: 3500 });
+    if (!data || !data.proposal || !data.contract) throw new Error('Documents came back incomplete.');
+    l.proposal = data.proposal; l.contract = data.contract; save(); renderContract();
+    toast('Proposal + contract ready');
+  } catch (e) {
+    out.innerHTML = `<div class="panel no-print">${errorHTML('Document generation failed: ' + e.message, 'retryDocs')}</div>`;
+    const r = $('retryDocs'); if (r) r.onclick = () => $('btnContract').onclick();
+  }
+};
+
+/* ═══════════ SECTION 5 — SITE DELIVERY ═══════════ */
+function renderDelivery() {
+  const l = leadBar('deliveryLeadBar');
+  const out = $('deliveryOutput');
+  const hint = $('deliveryHint');
+  if (!l) { out.innerHTML = ''; hint.textContent = ''; return; }
+  hint.textContent = l.pkg ? `Scoped to: ${l.pkg.name} · ${usd(l.pkg.priceUSD)} · ${l.pkg.turnaround}` : (l.estimate ? `Scoped to custom estimate · ${usd(l.estimate.total)}` : '⚠ needs a package or estimate from Section 3');
+  if (!l.delivery) {
+    out.innerHTML = `<div class="panel no-print">${emptyHTML('⚒',
+      l.stage === 'closed' || l.stage === 'delivered'
+        ? `Deal closed — generate the delivery spec for <b>${esc(l.name)}</b>.`
+        : `Usually generated after close, but you can draft the spec for <b>${esc(l.name)}</b> any time (great for the proposal mockup description too).`)}</div>`;
+    return;
+  }
+  const d = l.delivery;
+  out.innerHTML = `<div class="panel">
+    <div class="row" style="justify-content:space-between">
+      <h3>Site content plan — ${esc(l.name)}</h3>
+      <div class="row">
+        <button class="copy-btn" data-copy="fullSpec">copy full spec</button>
+        <button class="btn ghost small" id="btnDlSpec">Download .md</button>
+        <button class="btn ghost small" id="btnReDeliver">Regenerate</button>
+        ${l.stage !== 'delivered' ? '<button class="btn small" id="btnMarkDelivered">Mark delivered ✓</button>' : ''}
+      </div>
+    </div>
+    <p class="sub">Page-by-page copy, ready to paste into a builder or hand to Claude Code.</p>
+    ${(d.contentPlan || []).map((p, i) => `
+      <div class="page-plan ${i === 0 ? 'open' : ''}">
+        <div class="pp-head" data-toggle><h5>${esc(p.page)}</h5>
+          <button class="copy-btn" data-copy="pp${i}">copy page</button></div>
+        <div class="pp-body" id="pp${i}" data-raw="${esc(p.sections.map(s => s.name.toUpperCase() + '\n' + s.copy).join('\n\n'))}">
+          ${p.sections.map(s => `<div class="pp-section"><div class="pp-name">${esc(s.name)}</div><div class="pp-copy">${esc(s.copy)}</div></div>`).join('')}
+        </div>
+      </div>`).join('')}
+  </div>
+  <div class="panel">
+    <div class="row" style="justify-content:space-between">
+      <h3>Builder brief</h3>
+      <button class="copy-btn" data-copy="briefBody">copy brief</button>
+    </div>
+    <p class="sub">Structured brief for Claude Code / Claude Design / a template builder — scope matches exactly what was sold.</p>
+    <div class="msg-block"><div class="msg-body" id="briefBody" data-raw="${esc(d.builderBrief)}">${esc(d.builderBrief)}</div></div>
+  </div>
+  <div id="fullSpec" data-raw="${esc(buildFullSpec(l))}" style="display:none"></div>`;
+  wireCopyButtons(out);
+  out.querySelectorAll('[data-toggle]').forEach(h => {
+    h.addEventListener('click', e => { if (e.target.closest('.copy-btn')) return; h.parentElement.classList.toggle('open'); });
+  });
+  $('btnReDeliver').onclick = () => genDelivery(l);
+  $('btnDlSpec').onclick = () => downloadFile(l.name.replace(/\W+/g, '-').toLowerCase() + '-site-spec.md', buildFullSpec(l));
+  const mdBtn = $('btnMarkDelivered');
+  if (mdBtn) mdBtn.onclick = () => { l.stage = 'delivered'; save(); renderPipeline(); renderDelivery(); toast('Delivered 🔥 — pipeline complete'); };
+}
+function buildFullSpec(l) {
+  const d = l.delivery; if (!d) return '';
+  const scope = l.pkg || {};
+  let s = `# ${l.name} — Website Delivery Spec\n\nPackage: ${scope.name || 'Custom'} · ${scope.priceUSD ? usd(scope.priceUSD) : ''} · ${scope.turnaround || ''}\n\n## Builder brief\n\n${d.builderBrief}\n\n## Page-by-page content\n`;
+  (d.contentPlan || []).forEach(p => {
+    s += `\n### ${p.page}\n`;
+    p.sections.forEach(sec => { s += `\n**${sec.name}**\n\n${sec.copy}\n`; });
+  });
+  return s;
+}
+async function genDelivery(l) {
+  const out = $('deliveryOutput');
+  const scope = l.pkg || (l.estimate ? { name: 'Custom scope', priceUSD: l.estimate.total, turnaround: `${l.estimate.days}-${l.estimate.days + 3} working days`, includes: [`${l.estimate.pages}-page website`, ...l.estimate.feats] } : null);
+  if (!scope) { toast('Attach a package or estimate in Section 3 first', 'err'); gotoTab('pricing'); return; }
+  out.innerHTML = `<div class="panel no-print">${loadingHTML('Writing the full site content plan + builder brief…', l.name + ' · ' + scope.name)}</div>`;
+  try {
+    const data = await askJSON(
+`You are a senior web content strategist. Produce the complete build spec for this sold website — the deliverable must match EXACTLY what was sold, no scope creep.
+Client: ${l.name} — ${l.industry} in ${l.location}. Pain point solved: ${PAIN_LABEL[l.painPoint]}. ${l.notes ? 'Known details: ' + l.notes : ''}
+Sold package: ${scope.name} — inclusions: ${scope.includes.join('; ')} — turnaround ${scope.turnaround}.
+Derive the exact page list from the inclusions (a 1-page package = one long landing page with sections as "pages" entries is fine).
+Return JSON:
+{"contentPlan":[{"page":"Home","sections":[{"name":"Hero","copy":"final ready-to-publish copy: headline, subheadline, CTA button text"},{"name":"...","copy":"..."}]}],
+"builderBrief":"a structured plain-text brief a developer or AI builder can execute directly: SITE: name+one-liner / PAGES: list / DESIGN DIRECTION: colors, typography feel, imagery style suited to this industry / KEY COMPONENTS: nav, forms, click-to-call, WhatsApp button, booking widget etc per the inclusions / SEO: title tags + meta description per page with local keywords / TECH NOTES: mobile-first, load speed, form destinations / OUT OF SCOPE: explicitly list what was NOT sold"}
+Write real, specific, publish-ready copy — service names, local references, strong CTAs. Every page sold gets full section copy (Hero, intro/About, Services detail, trust/social proof, FAQ where sensible, Contact with CTA).`,
+      { maxTokens: 6000 });
+    if (!data || !Array.isArray(data.contentPlan) || !data.contentPlan.length || !data.builderBrief) throw new Error('Spec came back incomplete.');
+    l.delivery = data; save(); renderDelivery();
+    toast('Delivery spec ready');
+  } catch (e) {
+    out.innerHTML = `<div class="panel no-print">${errorHTML('Spec generation failed: ' + e.message, 'retryDel')}</div>`;
+    const r = $('retryDel'); if (r) r.onclick = () => genDelivery(l);
+  }
+}
+$('btnDelivery').onclick = () => { const l = activeLead(); if (!l) { toast('Select a lead first', 'err'); return; } genDelivery(l); };
+
+/* ─────────────── init ─────────────── */
+$('fxRate').addEventListener('change', () => {
+  state.fxRate = fx(); save();
+  renderPipeline(); renderPricing(); renderContract(); renderDelivery();
+});
+load();
+$('fxRate').value = state.fxRate;
+renderPipeline(); renderPricing(); renderOutreach(); renderContract(); renderDelivery();
+renderDiscoverBanner();
+detectMode();
+})();
+</script>
+</body>
+</html>
