@@ -13,10 +13,19 @@
 
 const express = require('express');
 const path = require('path');
+const security = require('./security');
 
 const app = express();
+// App password on every /api route (except /api/health) + serves /auth.js.
+// Runs before the body is read, so strangers can't even upload data.
+security.install(app);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// The AI call is fixed here on the server. Whatever model or reply length the
+// browser sends is ignored.
+const AI_MODEL = 'claude-sonnet-4-6';
+const AI_MAX_TOKENS = 6000;
 
 const PORT = process.env.PORT || 3000;
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -38,10 +47,12 @@ app.get('/api/health', (req, res) => {
 // ---------------------------------------------------------------------------
 // Anthropic proxy — the frontend posts a standard /v1/messages body here.
 // ---------------------------------------------------------------------------
-app.post('/api/generate', async (req, res) => {
+app.post('/api/generate', security.aiLimit, async (req, res) => {
   if (!ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY is not set on the server.' });
   }
+  const body = security.lockedClaudeBody(req.body, { model: AI_MODEL, maxTokens: AI_MAX_TOKENS });
+  if (!body) return res.status(400).json({ error: 'messages[] is required' });
   try {
     const upstream = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -50,7 +61,7 @@ app.post('/api/generate', async (req, res) => {
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(body),
     });
     const data = await upstream.json();
     res.status(upstream.status).json(data);
